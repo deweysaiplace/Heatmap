@@ -1,4 +1,4 @@
-const CACHE_NAME = 'heatmap-cache-v2';
+const CACHE_NAME = 'heatmap-cache-v4';
 const urlsToCache = [
   './',
   'index.html',
@@ -31,14 +31,13 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Use Network-First for HTML files to ensure they are always up to date
-  // Do NOT cache the Google Apps Script sync endpoint
-  if (event.request.url.includes('script.google.com')) {
-    event.respondWith(fetch(event.request));
+  // CRITICAL: NEVER intercept POST requests or sync endpoint. Let them go straight to network.
+  if (event.request.method !== 'GET' || event.request.url.includes('script.google.com')) {
     return;
   }
 
-  if (event.request.mode === 'navigate' || (event.request.method === 'GET' && event.request.url.includes('.html'))) {
+  // Use Network-First for HTML files 
+  if (event.request.mode === 'navigate' || event.request.url.includes('.html')) {
     event.respondWith(
       fetch(event.request).catch(() => {
         return caches.match(event.request);
